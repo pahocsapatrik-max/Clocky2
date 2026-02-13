@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Weboldal konténer (Apache + PHP)
+  clocky-app:
+    build: .
+    container_name: clocky_web
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      # Itt a neveknek egyezniük kell a config.php getenv() hívásaival!
+      - DB_HOST=clocky-db
+      - DB_NAME=clocky
+      - DB_USER=patriiik
+      - DB_PASS=patriiik30
+    depends_on:
+      - clocky-db
+    networks:
+      - clocky-network
+
+  # Adatbázis konténer (MySQL)
+  clocky-db:
+    image: mysql:8.0
+    container_name: clocky_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: clocky
+      MYSQL_USER: patriiik
+      MYSQL_PASSWORD: patriiik30
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      # Az SQL fájlod automatikus importálása az első indításkor
+      - ./clocky.sql:/docker-entrypoint-initdb.d/clocky.sql
+    networks:
+      - clocky-network
+
+networks:
+  clocky-network:
+    driver: bridge
+
+volumes:
+  db_data:
